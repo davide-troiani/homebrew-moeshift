@@ -26,7 +26,9 @@ The bundled preparation interpreter is under `$(brew --prefix moeshift)/libexec/
 The formula builds native Apple Silicon code and embeds Metal shaders. CMake is
 a build dependency; Python and the project's existing GGUF dependencies are
 isolated under the package prefix. Python wheels are pinned by URL and SHA-256
-for CPython 3.14 on macOS arm64. Keep license notices in the installed package.
+for CPython 3.14 on macOS arm64. The PyYAML wheel embeds LibYAML and has no
+external libyaml linkage. Homebrew audit nevertheless requests an external
+libyaml dependency based on the resource name; this remains a known audit finding. Keep license notices in the installed package.
 There are no GitHub Actions or automatic publication jobs.
 
 Before publication, pin a tagged MoEShift release with its source checksum and

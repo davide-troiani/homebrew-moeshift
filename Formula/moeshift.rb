@@ -5,15 +5,16 @@ class Moeshift < Formula
   head "https://github.com/davide-troiani/moeshift.git", branch: "feature/openai-les-server"
 
   depends_on "cmake" => :build
-  depends_on "python@3.14"
-  depends_on :macos
   depends_on arch: :arm64
+  depends_on :macos
+  depends_on "python@3.14"
 
   resource "numpy" do
     url "https://files.pythonhosted.org/packages/f3/49/fee7587c33ee35f7977f9051d7f2023d4e7246d62710c80f20c2361ea232/numpy-2.5.4-cp314-cp314-macosx_11_0_arm64.whl"
     sha256 "ffa6ce09a1c6a08e9667dd9c97aa0b14184e8d18f2a14b78b2a2328c9147f076"
   end
 
+  # The upstream arm64 wheel embeds LibYAML and links only libSystem.
   resource "pyyaml" do
     url "https://files.pythonhosted.org/packages/bd/9c/4d95bb87eb2063d20db7b60faa3840c1b18025517ae857371c4dd55a6b3a/pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl"
     sha256 "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
@@ -59,7 +60,7 @@ class Moeshift < Formula
     system "cmake", "--build", "build", "--target", "moeshift", "--parallel", ENV.make_jobs
     system "cmake", "--install", "build", "--component", "moeshift"
 
-    python = Formula["python@3.14"].opt_bin/"python3.14"
+    python = formula_opt_bin("python@3.14")/"python3.14"
     system python, "-m", "venv", libexec
     # Pinned wheels avoid build-time dependency resolution and global Python changes.
     resources.each do |res|
@@ -69,7 +70,8 @@ class Moeshift < Formula
       system libexec/"bin/python", "-m", "pip", "install", "--no-index", "--no-deps", wheel
     end
     system libexec/"bin/python", "-m", "pip", "check"
-    pkgshare.install "LICENSE"
+    pkgshare.install "LICENSE", "licenses"
+    (pkgshare/"gguf-py").install "gguf-py/LICENSE"
   end
 
   def caveats
@@ -121,7 +123,7 @@ class Moeshift < Formula
     expected = JSON.parse((pkgshare/"moeshift.json").read)
     2.times do
       pid = spawn({ "HOME" => testpath.to_s, "XDG_CONFIG_HOME" => (testpath/".config").to_s },
-                  bin/"moeshift", "--port", port.to_s, [:out, :err] => testpath/"server.log")
+                  bin/"moeshift", "--port", port.to_s, [:out, :err] => (testpath/"server.log").to_s)
       begin
         Timeout.timeout(20) do
           loop do
@@ -147,7 +149,7 @@ class Moeshift < Formula
         end
       end
       expected["port"] = port
-      config.write(JSON.pretty_generate(expected))
+      File.write(config, JSON.pretty_generate(expected))
     end
   end
 end
