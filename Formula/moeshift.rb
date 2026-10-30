@@ -1,11 +1,15 @@
 class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
+  url "https://github.com/davide-troiani/moeshift.git",
+      tag:      "v0.1.0-alpha.1",
+      revision: "6fac70346e893bfb631f4780d0a843549ab666f8"
   license "MIT"
   head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 
   depends_on "cmake" => :build
   depends_on arch: :arm64
+  depends_on "libyaml"
   depends_on :macos
   depends_on "python@3.14"
 
@@ -14,10 +18,19 @@ class Moeshift < Formula
     sha256 "ffa6ce09a1c6a08e9667dd9c97aa0b14184e8d18f2a14b78b2a2328c9147f076"
   end
 
-  # The upstream arm64 wheel embeds LibYAML and links only libSystem.
   resource "pyyaml" do
-    url "https://files.pythonhosted.org/packages/bd/9c/4d95bb87eb2063d20db7b60faa3840c1b18025517ae857371c4dd55a6b3a/pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl"
-    sha256 "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
+    url "https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/pyyaml-6.0.3.tar.gz"
+    sha256 "d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"
+  end
+
+  resource "setuptools" do
+    url "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl"
+    sha256 "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2"
+  end
+
+  resource "cython" do
+    url "https://files.pythonhosted.org/packages/8a/7f/e409f76bb955ecdcb746b80350b945fbb808846d797346d647a37e1790ca/cython-3.3.0-cp314-cp314-macosx_11_0_arm64.whl"
+    sha256 "0deedc2e9a5a664e1adfa4c2d310aa7b54903e1a647c274b6c9213f77a02d637"
   end
 
   resource "requests" do
@@ -62,16 +75,28 @@ class Moeshift < Formula
 
     python = formula_opt_bin("python@3.14")/"python3.14"
     system python, "-m", "venv", libexec
-    # Pinned wheels avoid build-time dependency resolution and global Python changes.
+    build_env = buildpath/"pyyaml-build"
+    system python, "-m", "venv", build_env
+    # Build helpers stay outside the installed runtime environment.
     resources.each do |res|
+      next if res.name == "pyyaml"
+
       wheel = buildpath/"wheels"/File.basename(res.url)
       wheel.dirname.mkpath
       cp res.cached_download, wheel
-      system libexec/"bin/python", "-m", "pip", "install", "--no-index", "--no-deps", wheel
+      target = %w[setuptools cython].include?(res.name) ? build_env : libexec
+      system target/"bin/python", "-m", "pip", "install", "--no-index", "--no-deps", wheel
     end
+    ENV.append "CPPFLAGS", "-I#{formula_opt_include("libyaml")}"
+    ENV.append "LDFLAGS", "-L#{formula_opt_lib("libyaml")}"
+    ENV["PYYAML_FORCE_LIBYAML"] = "1"
+    resource("pyyaml").stage do
+      system build_env/"bin/python", "-m", "pip", "wheel", "--no-index", "--no-deps",
+             "--no-build-isolation", "--wheel-dir", buildpath/"pyyaml-wheels", "."
+    end
+    yaml_wheel = (buildpath/"pyyaml-wheels").glob("*.whl").fetch(0)
+    system libexec/"bin/python", "-m", "pip", "install", "--no-index", "--no-deps", yaml_wheel
     system libexec/"bin/python", "-m", "pip", "check"
-    pkgshare.install "LICENSE", "licenses"
-    (pkgshare/"gguf-py").install "gguf-py/LICENSE"
   end
 
   def caveats
@@ -97,6 +122,13 @@ class Moeshift < Formula
 
     python = libexec/"bin/python"
     experts = pkgshare/"tools/moe/experts.py"
+    system python, "-c", <<~PYTHON
+      import yaml
+      assert yaml.__with_libyaml__
+      assert yaml.load("ok: true", Loader=yaml.CSafeLoader) == {"ok": True}
+    PYTHON
+    yaml_extension = shell_output("#{python} -c 'import yaml._yaml; print(yaml._yaml.__file__)'").strip
+    assert_match "#{formula_opt_lib("libyaml")}/libyaml", shell_output("otool -L #{yaml_extension}")
     system python, "-c", <<~PYTHON
       import sys
       sys.path.insert(0, #{(pkgshare/"gguf-py").to_s.dump})

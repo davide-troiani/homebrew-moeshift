@@ -3,18 +3,26 @@
 Private preparation tap for [MoEShift](https://github.com/davide-troiani/moeshift).
 Both repositories remain private until the maintainer authorizes publication.
 
-## Private preview
+## Private alpha installation
 
-Authenticate Git with an account allowed to read both private repositories.
-The preview follows the development branch and requires an explicit HEAD install:
+The formula pins `v0.1.0-alpha.1` to its exact source revision. Both repositories
+remain private, so authenticate with GitHub CLI using an account that can read
+both repositories, then install:
 
 ```sh
-brew install --HEAD davide-troiani/moeshift/moeshift
+HOMEBREW_GITHUB_API_TOKEN="$(gh auth token --hostname github.com)" \
+  brew install davide-troiani/moeshift/moeshift
 ```
 
-The source branch must include the current MoEShift application and first-launch
-configuration support before the preview can be installed from GitHub.
-No tagged source release has been published yet.
+The token is passed only to this command. Once both repositories are public,
+installation requires no authentication:
+
+```sh
+brew install davide-troiani/moeshift/moeshift
+```
+
+Use `--HEAD` only to explicitly select the development branch instead of the
+versioned alpha. Creating the source tag does not publish the GitHub draft release.
 
 On first launch, `moeshift` creates `~/.config/moeshift/config.json` (or the
 XDG_CONFIG_HOME equivalent) without replacing an existing file. Set model and
@@ -25,19 +33,16 @@ The bundled preparation interpreter is under `$(brew --prefix moeshift)/libexec/
 
 The formula builds native Apple Silicon code and embeds Metal shaders. CMake is
 a build dependency; Python and the project's existing GGUF dependencies are
-isolated under the package prefix. Python wheels are pinned by URL and SHA-256
-for CPython 3.14 on macOS arm64. The PyYAML wheel embeds LibYAML and has no
-external libyaml linkage. Homebrew audit nevertheless requests an external
-libyaml dependency based on the resource name; this remains a known audit finding. Keep license notices in the installed package.
+isolated under the package prefix. Resources are pinned by URL and SHA-256.
+PyYAML is compiled from source against Homebrew LibYAML; its Setuptools and
+Cython build helpers are isolated in a temporary environment and are not installed
+with the runtime. Other Python wheels target CPython 3.14 on macOS arm64.
+Keep license notices in the installed package.
 There are no GitHub Actions or automatic publication jobs.
 
-Before publication, pin a tagged MoEShift release with its source checksum and
-validate a clean installation, model preparation, and real-model inference on a
-Mac. That stable formula enables:
-
-```sh
-brew install davide-troiani/moeshift/moeshift
-```
+Before publishing the alpha, validate model preparation and real-model inference
+on the installed package. Future versions must update both the tag and pinned
+source revision; never move a released tag. No prebuilt bottle is provided yet.
 
 Checks for an installed preview:
 
