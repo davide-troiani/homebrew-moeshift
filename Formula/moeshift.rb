@@ -2,7 +2,7 @@ class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
   license "MIT"
-  head "https://github.com/davide-troiani/moeshift.git", branch: "feature/openai-les-server"
+  head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 
   depends_on "cmake" => :build
   depends_on arch: :arm64
