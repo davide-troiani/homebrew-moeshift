@@ -1,56 +1,69 @@
-# MoEShift Homebrew tap
+# MoEShift Homebrew Tap
 
-Private preparation tap for [MoEShift](https://github.com/davide-troiani/moeshift).
-Both repositories remain private until the maintainer authorizes publication.
+Official Homebrew tap for [MoEShift](https://github.com/davide-troiani/moeshift), a memory-efficient Mixture-of-Experts inference engine for Apple Silicon.
 
-## Private alpha installation
+## Installation
 
-The formula pins `v0.1.0-alpha.1` to its exact source revision. Both repositories
-remain private, so authenticate with GitHub CLI using an account that can read
-both repositories, then install:
+Requires macOS on Apple Silicon (M-series) and [Homebrew](https://brew.sh/).
 
-```sh
-HOMEBREW_GITHUB_API_TOKEN="$(gh auth token --hostname github.com)" \
-  brew install davide-troiani/moeshift/moeshift
-```
-
-The token is passed only to this command. Once both repositories are public,
-installation requires no authentication:
+Install MoEShift with:
 
 ```sh
 brew install davide-troiani/moeshift/moeshift
 ```
 
-Use `--HEAD` only to explicitly select the development branch instead of the
-versioned alpha. Creating the source tag does not publish the GitHub draft release.
+The current formula installs **v0.1.0-alpha.1**, the first public alpha release.
 
-On first launch, `moeshift` creates `~/.config/moeshift/config.json` (or the
-XDG_CONFIG_HOME equivalent) without replacing an existing file. Set model and
-expert paths there. Model weights and extracted experts are not packaged.
-The bundled preparation interpreter is under `$(brew --prefix moeshift)/libexec/bin/python`.
+MoEShift is built from source with Metal support. Prebuilt Homebrew bottles are not currently provided.
 
-## Maintenance
+## Getting started
 
-The formula builds native Apple Silicon code and embeds Metal shaders. CMake is
-a build dependency; Python and the project's existing GGUF dependencies are
-isolated under the package prefix. Resources are pinned by URL and SHA-256.
-PyYAML is compiled from source against Homebrew LibYAML; its Setuptools and
-Cython build helpers are isolated in a temporary environment and are not installed
-with the runtime. Other Python wheels target CPython 3.14 on macOS arm64.
-Keep license notices in the installed package.
-There are no GitHub Actions or automatic publication jobs.
+Launch MoEShift once:
 
-Before publishing the alpha, validate model preparation and real-model inference
-on the installed package. Future versions must update both the tag and pinned
-source revision; never move a released tag. No prebuilt bottle is provided yet.
+```sh
+moeshift
+```
 
-Checks for an installed preview:
+On first launch, MoEShift creates `~/.config/moeshift/config.json` (or the equivalent `XDG_CONFIG_HOME` path) without overwriting existing settings.
+
+Stop the server with Ctrl-C, then configure the model and expert paths before restarting.
+
+Model weights and extracted experts are not included in the Homebrew package.
+
+For model downloads, expert extraction, configuration and usage instructions, see the [MoEShift README](https://github.com/davide-troiani/moeshift#readme).
+
+## Updates
+
+Update Homebrew and upgrade MoEShift when a new formula version becomes available:
+
+```sh
+brew update
+brew upgrade davide-troiani/moeshift/moeshift
+```
+
+## Release status
+
+MoEShift is currently in alpha. The runtime is functional, but features, performance and compatibility may change.
+
+See the [GitHub releases](https://github.com/davide-troiani/moeshift/releases) for published versions and release notes.
+
+## Maintainer notes
+
+The formula pins the release tag and exact source revision. Python resources are pinned with SHA-256 checksums.
+
+For each new release, update the formula's tag and revision without modifying previously published tags.
+
+The formula includes automated checks for GGUF expert extraction and verification, local server endpoints, and first-launch configuration behavior. These checks do not replace inference testing with a real model.
+
+Validate the installed package with:
 
 ```sh
 brew test davide-troiani/moeshift/moeshift
 brew audit --strict davide-troiani/moeshift/moeshift
 ```
 
-The formula test verifies extraction and full byte comparison on a tiny generated
-GGUF, localhost health/model discovery, first-launch configuration creation and
-preservation across restarts. It does not benchmark a real model.
+The package includes a dedicated Python environment for model preparation tools under `$(brew --prefix moeshift)/libexec`.
+
+## License
+
+MoEShift is distributed under the [MIT License](https://github.com/davide-troiani/moeshift/blob/main/LICENSE).
