@@ -5,7 +5,7 @@ Both repositories remain private until the maintainer authorizes publication.
 
 ## Private alpha installation
 
-The formula pins `v0.1.0-alpha.1` to its exact source revision. Both repositories
+The formula pins `v0.1.0-alpha.2` to its exact source revision. Both repositories
 remain private, so authenticate with GitHub CLI using an account that can read
 both repositories, then install:
 
