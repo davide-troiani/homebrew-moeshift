@@ -12,7 +12,7 @@ Install MoEShift with:
 brew install davide-troiani/moeshift/moeshift
 ```
 
-The current formula installs **v0.1.0-alpha.2**.
+The current formula installs **v0.1.0-alpha.3**.
 
 MoEShift is built from source with Metal support. Prebuilt Homebrew bottles are not currently provided.
 
@@ -24,13 +24,13 @@ Launch MoEShift once:
 moeshift
 ```
 
-On first launch, MoEShift creates `~/.config/moeshift/config.json` (or the equivalent `XDG_CONFIG_HOME` path) without overwriting existing settings.
+On first launch, use the arrow keys and Enter to select a tested model. Drag in an existing GGUF or download it with progress and ETA. The wizard prepares experts, saves the configuration and starts the local API.
 
-Stop the server with Ctrl-C, then configure the model and expert paths before restarting.
+Downloads and prepared experts live under `~/.moeshift/models/`. GGUF files supplied by the user stay in place. Subsequent launches use the saved configuration.
 
-Model weights and extracted experts are not included in the Homebrew package.
+Choose **Manual configuration** to create a base JSON file and follow the linked setup guide. Existing configurations remain available after upgrading.
 
-For model downloads, expert extraction, configuration and usage instructions, see the [MoEShift README](https://github.com/davide-troiani/moeshift#readme).
+See the [MoEShift README](https://github.com/davide-troiani/moeshift#readme) for tested models and client setup.
 
 ## Updates
 

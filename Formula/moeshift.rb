@@ -2,8 +2,8 @@ class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
   url "https://github.com/davide-troiani/moeshift.git",
-      tag:      "v0.1.0-alpha.2",
-      revision: "b858913d9b459b28196183d3e7b89b06478735e6"
+      tag:      "v0.1.0-alpha.3",
+      revision: "2b1b3e87ea94059518179bd93252c7452d6c11f3"
   license "MIT"
   head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 
@@ -101,22 +101,16 @@ class Moeshift < Formula
 
   def caveats
     <<~EOS
-      Start once with:
-        moeshift
-      The first launch creates ~/.config/moeshift/config.json (or the XDG_CONFIG_HOME path).
-      Stop with Ctrl-C, set model and moe-experts paths in that file, then restart.
-      Existing configuration is never overwritten.
-
-      Model preparation uses:
-        #{opt_libexec}/bin/python #{opt_pkgshare}/tools/moe/experts.py extract --model FILE --out-dir DIR
-        #{opt_libexec}/bin/python #{opt_pkgshare}/tools/moe/experts.py verify --model FILE --experts DIR
-      Model weights are not included.
+      Run moeshift in Terminal to choose a model, use existing GGUF files or download them,
+      prepare experts, and start your local server. Downloads and experts are kept in
+      ~/.moeshift/models/. Run moeshift again for subsequent starts.
     EOS
   end
 
   test do
     require "json"
     require "net/http"
+    require "pty"
     require "socket"
     require "timeout"
 
@@ -153,6 +147,21 @@ class Moeshift < Formula
     socket.close
     config = testpath/".config/moeshift/config.json"
     expected = JSON.parse((pkgshare/"moeshift.json").read)
+    assert_path_exists pkgshare/"tools/moe/onboarding.py"
+    env = { "HOME" => testpath.to_s, "XDG_CONFIG_HOME" => (testpath/".config").to_s }
+    PTY.spawn(env, (bin/"moeshift").to_s) do |output, input, pid|
+      Timeout.timeout(30) do
+        assert output.each_line.any? { |line| line.include?("Manual configuration") }
+        input.write "\e[B\e[B\r" # Highlight manual configuration and press Enter.
+        begin
+          output.read
+        rescue Errno::EIO # macOS PTYs can report EIO when the child exits.
+          nil
+        end
+      end
+      assert_predicate Process.wait2(pid).last, :success?
+    end
+    assert_equal expected, JSON.parse(config.read)
     2.times do
       pid = spawn({ "HOME" => testpath.to_s, "XDG_CONFIG_HOME" => (testpath/".config").to_s },
                   bin/"moeshift", "--port", port.to_s, [:out, :err] => (testpath/"server.log").to_s)
