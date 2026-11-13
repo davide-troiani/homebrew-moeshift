@@ -2,8 +2,8 @@ class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
   url "https://github.com/davide-troiani/moeshift.git",
-      tag:      "v0.1.0-alpha.3",
-      revision: "2b1b3e87ea94059518179bd93252c7452d6c11f3"
+      tag:      "v0.1.0-alpha.4",
+      revision: "d365bd0e3f17004052452de05dad0cf749d273ca"
   license "MIT"
   head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 
@@ -151,7 +151,8 @@ class Moeshift < Formula
     env = { "HOME" => testpath.to_s, "XDG_CONFIG_HOME" => (testpath/".config").to_s }
     PTY.spawn(env, (bin/"moeshift").to_s) do |output, input, pid|
       Timeout.timeout(30) do
-        assert output.each_line.any? { |line| line.include?("Manual configuration") }
+        menu = output.each_line.find { |line| line.include?("Manual configuration") }
+        assert_match "Manual configuration", menu.to_s
         input.write "\e[B\e[B\r" # Highlight manual configuration and press Enter.
         begin
           output.read
