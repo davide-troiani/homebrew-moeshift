@@ -2,8 +2,8 @@ class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
   url "https://github.com/davide-troiani/moeshift.git",
-      tag:      "v0.1.0-alpha.4",
-      revision: "d365bd0e3f17004052452de05dad0cf749d273ca"
+      tag:      "v0.1.0-alpha.5",
+      revision: "a9f103ce3ce02a47b4c96d94c810e1fbd72d46ca"
   license "MIT"
   head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 

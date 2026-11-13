@@ -12,7 +12,7 @@ Install MoEShift with:
 brew install davide-troiani/moeshift/moeshift
 ```
 
-The current formula installs **v0.1.0-alpha.4**.
+The current formula installs **v0.1.0-alpha.5**.
 
 MoEShift is built from source with Metal support. Prebuilt Homebrew bottles are not currently provided.
 
