@@ -51,9 +51,9 @@ See the [GitHub releases](https://github.com/davide-troiani/moeshift/releases) f
 
 ## Maintainer notes
 
-The formula pins the release tag and exact source revision. Python resources are pinned with SHA-256 checksums.
+The formula pins the release archive and Python resources with SHA-256 checksums.
 
-For each new release, update the formula's tag and revision without modifying previously published tags.
+For each new release, update the archive URL and checksum. Preserve previously published tags.
 
 The formula includes automated checks for GGUF expert extraction and verification, local server endpoints, and first-launch configuration behavior. These checks do not replace inference testing with a real model.
 
