@@ -2,8 +2,8 @@ class Moeshift < Formula
   desc "Local MoE inference on Apple Silicon with SSD expert streaming"
   homepage "https://github.com/davide-troiani/moeshift"
   url "https://github.com/davide-troiani/moeshift.git",
-      tag:      "v0.1.0-alpha.5",
-      revision: "a9f103ce3ce02a47b4c96d94c810e1fbd72d46ca"
+      tag:      "v0.1.0-alpha.6",
+      revision: "4f8891ed647a9a4ccf0e11130dc7552b4e9a1c97"
   license "MIT"
   head "https://github.com/davide-troiani/moeshift.git", branch: "main"
 
@@ -64,6 +64,11 @@ class Moeshift < Formula
   end
 
   def install
+    # Alpha 6 was tagged with the previous application version in its source.
+    if build.stable? && (buildpath/"moeshift-version.txt").read.strip != version.to_s
+      inreplace "tools/server/moeshift-version.h.in", "@MOESHIFT_VERSION@", version.to_s
+    end
+
     system "cmake", "-S", ".", "-B", "build", *std_cmake_args,
                    "-DBUILD_SHARED_LIBS=OFF", "-DGGML_METAL=ON",
                    "-DGGML_METAL_EMBED_LIBRARY=ON", "-DGGML_NATIVE=ON",
@@ -114,6 +119,7 @@ class Moeshift < Formula
     require "socket"
     require "timeout"
 
+    assert_equal "MoEShift #{version}", shell_output("#{bin}/moeshift --version").strip if build.stable?
     python = libexec/"bin/python"
     experts = pkgshare/"tools/moe/experts.py"
     system python, "-c", <<~PYTHON
@@ -148,12 +154,13 @@ class Moeshift < Formula
     config = testpath/".config/moeshift/config.json"
     expected = JSON.parse((pkgshare/"moeshift.json").read)
     assert_path_exists pkgshare/"tools/moe/onboarding.py"
+    assert_path_exists pkgshare/"inkling-2-mini.json"
     env = { "HOME" => testpath.to_s, "XDG_CONFIG_HOME" => (testpath/".config").to_s }
     PTY.spawn(env, (bin/"moeshift").to_s) do |output, input, pid|
       Timeout.timeout(30) do
         menu = output.each_line.find { |line| line.include?("Manual configuration") }
         assert_match "Manual configuration", menu.to_s
-        input.write "\e[B\e[B\r" # Highlight manual configuration and press Enter.
+        input.write "\e[B\e[B\e[B\r" # Highlight manual configuration and press Enter.
         begin
           output.read
         rescue Errno::EIO # macOS PTYs can report EIO when the child exits.

@@ -12,7 +12,7 @@ Install MoEShift with:
 brew install davide-troiani/moeshift/moeshift
 ```
 
-The current formula installs **v0.1.0-alpha.5**.
+The current formula installs **v0.1.0-alpha.6**.
 
 MoEShift is built from source with Metal support. Prebuilt Homebrew bottles are not currently provided.
 
@@ -30,7 +30,7 @@ Downloads and prepared experts live under `~/.moeshift/models/`. GGUF files supp
 
 Choose **Manual configuration** to create a base JSON file and follow the linked setup guide. Existing configurations remain available after upgrading.
 
-For other supported GGUF models, set the model path and alias in the JSON configuration. Expert preparation is required only for Qwen SSD streaming. See the [configuration guide](https://github.com/davide-troiani/moeshift/blob/main/configs/README.md).
+For other supported GGUF models, set the model path and alias in the JSON configuration. SSD streaming uses matching prepared experts. See the [configuration guide](https://github.com/davide-troiani/moeshift/blob/main/configs/README.md).
 
 See the [MoEShift README](https://github.com/davide-troiani/moeshift#readme) for tested models and client setup.
 
